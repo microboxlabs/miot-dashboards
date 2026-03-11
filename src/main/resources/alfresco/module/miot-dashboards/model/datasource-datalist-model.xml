@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model name="dsdl:model" xmlns="http://www.alfresco.org/model/dictionary/1.0">
+
+    <!-- Model metadata -->
+    <description>Data Source Config Data List Model</description>
+    <author>MicroboxLabs</author>
+    <version>1.0</version>
+
+    <!-- Import required namespaces -->
+    <imports>
+        <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
+        <import uri="http://www.alfresco.org/model/content/1.0" prefix="cm"/>
+        <import uri="http://www.alfresco.org/model/datalist/1.0" prefix="dl"/>
+    </imports>
+
+    <!-- Custom namespace definition -->
+    <namespaces>
+        <namespace uri="http://www.mintral.com/model/datasource/1.0" prefix="dsdl"/>
+    </namespaces>
+
+    <!-- Type and property definitions -->
+    <types>
+        <!-- Data List Item Type for managing data source provider configurations -->
+        <type name="dsdl:dataSourceConfig">
+            <title>Data Source Config</title>
+            <parent>dl:dataListItem</parent>
+            <properties>
+                <property name="dsdl:dsName">
+                    <title>Name</title>
+                    <description>Display name, unique per site</description>
+                    <type>d:text</type>
+                    <mandatory>true</mandatory>
+                    <index enabled="true">
+                        <atomic>true</atomic>
+                        <stored>false</stored>
+                        <tokenised>true</tokenised>
+                    </index>
+                </property>
+                <property name="dsdl:dsType">
+                    <title>Type</title>
+                    <description>Provider type enum</description>
+                    <type>d:text</type>
+                    <default>POSTGREST</default>
+                    <index enabled="true">
+                        <atomic>true</atomic>
+                        <stored>false</stored>
+                        <tokenised>true</tokenised>
+                    </index>
+                </property>
+                <property name="dsdl:dsDescription">
+                    <title>Description</title>
+                    <description>Free-text description</description>
+                    <type>d:text</type>
+                    <mandatory>false</mandatory>
+                    <index enabled="false"/>
+                </property>
+                <property name="dsdl:dsUrl">
+                    <title>URL</title>
+                    <description>Base URL of the data source</description>
+                    <type>d:text</type>
+                    <mandatory>true</mandatory>
+                    <index enabled="false"/>
+                </property>
+                <property name="dsdl:dsConfigJson">
+                    <title>Config JSON</title>
+                    <description>JSON blob with authMethod discriminator and auth-specific fields</description>
+                    <type>d:text</type>
+                    <mandatory>false</mandatory>
+                    <index enabled="false"/>
+                </property>
+                <property name="dsdl:dsIsActive">
+                    <title>Is Active</title>
+                    <description>Whether this source is enabled</description>
+                    <type>d:boolean</type>
+                    <default>true</default>
+                </property>
+                <property name="dsdl:dsLastTestedAt">
+                    <title>Last Tested At</title>
+                    <description>ISO-8601 timestamp of last connection test</description>
+                    <type>d:datetime</type>
+                    <mandatory>false</mandatory>
+                    <index enabled="false"/>
+                </property>
+                <property name="dsdl:dsLastTestResult">
+                    <title>Last Test Result</title>
+                    <description>true = last test passed</description>
+                    <type>d:boolean</type>
+                    <mandatory>false</mandatory>
+                    <index enabled="false"/>
+                </property>
+            </properties>
+        </type>
+    </types>
+</model>

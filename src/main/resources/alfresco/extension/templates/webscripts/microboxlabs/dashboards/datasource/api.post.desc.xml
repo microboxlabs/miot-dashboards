@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<webscript>
+  <shortname>Data Source Config API</shortname>
+  <description>CRUD for data source provider configurations</description>
+  <url>/microboxlabs/dashboards/datasource/{action}</url>
+  <format default="json">argument</format>
+  <authentication>user</authentication>
+  <transaction>required</transaction>
+</webscript>
