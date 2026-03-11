@@ -1,0 +1,108 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ trunk, main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ trunk, main ]
+
+env:
+  JAVA_VERSION: '17'
+  JAVA_DISTRIBUTION: 'temurin'
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: maven
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "### Version: \`${VERSION}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build and test
+        run: mvn -B verify -DskipITs
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jars-${{ steps.version.outputs.version }}
+          path: target/*.jar
+          retention-days: 1
+
+  publish:
+    name: Publish to Maven Central
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: maven
+          server-id: central
+          server-username: SONATYPE_USERNAME
+          server-password: SONATYPE_PASSWORD
+
+      - name: Import GPG key
+        run: |
+          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Set release version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          mvn -B versions:set -DnewVersion="${VERSION}" -DgenerateBackupPoms=false
+
+      - name: Deploy to Maven Central
+        run: mvn -B deploy -Prelease -DskipTests
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Step summary
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## Published to Maven Central
+
+          **Version:** \`${VERSION}\`
+
+          **Maven Central:** [com.microboxlabs:miot-dashboards](https://central.sonatype.com/artifact/com.microboxlabs/miot-dashboards)
+
+          ### Usage
+
+          \`\`\`xml
+          <dependency>
+              <groupId>com.microboxlabs</groupId>
+              <artifactId>miot-dashboards</artifactId>
+              <version>${VERSION}</version>
+          </dependency>
+          \`\`\`
+          EOF
