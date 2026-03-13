@@ -11,4 +11,12 @@
         <property name="fileFolderService" ref="FileFolderService" />
     </bean>
 
+    <bean id="dashboardConfigService"
+          class="com.microboxlabs.dashboards.dashboard.service.DashboardConfigServiceImpl">
+        <property name="nodeService" ref="NodeService" />
+        <property name="siteService" ref="SiteService" />
+        <property name="fileFolderService" ref="FileFolderService" />
+        <property name="contentService" ref="ContentService" />
+    </bean>
+
 </beans>
