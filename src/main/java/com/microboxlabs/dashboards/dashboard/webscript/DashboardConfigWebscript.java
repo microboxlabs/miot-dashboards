@@ -83,7 +83,7 @@ public class DashboardConfigWebscript extends AbstractWebScript {
         }
 
         if (!body.has("config")) {
-            throw new WebScriptException(Status.STATUS_BAD_REQUEST, "Missing required fields: site, slug, and config");
+            throw new WebScriptException(Status.STATUS_BAD_REQUEST, "Missing required field: config");
         }
 
         var config = body.getJSONObject("config");
