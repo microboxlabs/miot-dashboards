@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<webscript>
+  <shortname>Dashboard Config API</shortname>
+  <description>Get and save dashboard layout configurations</description>
+  <url>/microboxlabs/dashboards/dashboard-config/{action}</url>
+  <format default="json">argument</format>
+  <authentication>user</authentication>
+  <transaction>required</transaction>
+</webscript>

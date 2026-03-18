@@ -10,4 +10,10 @@
         <property name="dataSourceConfigService" ref="dataSourceConfigService" />
     </bean>
 
+    <bean id="webscript.microboxlabs.dashboards.dashboard-config.api.post"
+          class="com.microboxlabs.dashboards.dashboard.webscript.DashboardConfigWebscript"
+          parent="webscript">
+        <property name="dashboardConfigService" ref="dashboardConfigService" />
+    </bean>
+
 </beans>
