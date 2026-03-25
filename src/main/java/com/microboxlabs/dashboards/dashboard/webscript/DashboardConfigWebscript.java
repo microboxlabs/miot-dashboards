@@ -94,10 +94,14 @@ public class DashboardConfigWebscript extends AbstractWebScript {
 
         var dataArray = new JSONArray();
         for (Map.Entry<String, String> entry : configs.entrySet()) {
-            var item = new JSONObject();
-            item.put("slug", entry.getKey());
-            item.put("config", new JSONObject(entry.getValue()));
-            dataArray.put(item);
+            try {
+                var item = new JSONObject();
+                item.put("slug", entry.getKey());
+                item.put("config", new JSONObject(entry.getValue()));
+                dataArray.put(item);
+            } catch (JSONException e) {
+                logger.warn("Skipping config with slug '{}': malformed JSON value '{}'", entry.getKey(), entry.getValue(), e);
+            }
         }
 
         var response = new JSONObject();
