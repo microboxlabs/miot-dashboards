@@ -1,5 +1,9 @@
 package com.microboxlabs.dashboards.dashboard.service;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.alfresco.model.ContentModel;
 import org.alfresco.service.cmr.model.FileFolderService;
 import org.alfresco.service.cmr.repository.ContentService;
@@ -61,6 +65,36 @@ public class DashboardConfigServiceImpl implements DashboardConfigService {
         }
 
         return reader.getContentString();
+    }
+
+    @Override
+    public Map<String, String> listConfigs(String siteShortName) {
+        var docLib = getDocumentLibrary(siteShortName);
+        if (docLib == null) {
+            return Collections.emptyMap();
+        }
+
+        var dashboardFolder = fileFolderService.searchSimple(docLib, DASHBOARD_FOLDER);
+        if (dashboardFolder == null) {
+            return Collections.emptyMap();
+        }
+
+        var files = fileFolderService.listFiles(dashboardFolder);
+        var configs = new LinkedHashMap<String, String>();
+
+        for (var file : files) {
+            var fileName = file.getName();
+            if (!fileName.endsWith("-config.json")) {
+                continue;
+            }
+            var slug = fileName.substring(0, fileName.length() - "-config.json".length());
+            var reader = contentService.getReader(file.getNodeRef(), ContentModel.PROP_CONTENT);
+            if (reader != null && reader.exists()) {
+                configs.put(slug, reader.getContentString());
+            }
+        }
+
+        return configs;
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.microboxlabs.dashboards.dashboard.webscript;
 import java.io.IOException;
 import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,9 @@ public class DashboardConfigWebscript extends AbstractWebScript {
             switch (action) {
                 case "get":
                     handleGet(req, res);
+                    break;
+                case "list":
+                    handleList(req, res);
                     break;
                 case "save":
                     handleSave(req, res);
@@ -70,6 +74,31 @@ public class DashboardConfigWebscript extends AbstractWebScript {
         res.setContentType("application/json;charset=UTF-8");
         var response = new JSONObject();
         response.put("data", configJson != null ? new JSONObject(configJson) : JSONObject.NULL);
+        res.getWriter().write(response.toString());
+    }
+
+    private void handleList(WebScriptRequest req, WebScriptResponse res) throws IOException {
+        var body = new JSONObject(req.getContent().getContent());
+        var site = body.optString("site", null);
+
+        if (site == null || site.isBlank()) {
+            throw new WebScriptException(Status.STATUS_BAD_REQUEST, "Missing required parameter: site");
+        }
+
+        var configs = dashboardConfigService.listConfigs(site);
+
+        var dataArray = new JSONArray();
+        for (Map.Entry<String, String> entry : configs.entrySet()) {
+            var item = new JSONObject();
+            item.put("slug", entry.getKey());
+            item.put("config", new JSONObject(entry.getValue()));
+            dataArray.put(item);
+        }
+
+        var response = new JSONObject();
+        response.put("data", dataArray);
+
+        res.setContentType("application/json;charset=UTF-8");
         res.getWriter().write(response.toString());
     }
 
