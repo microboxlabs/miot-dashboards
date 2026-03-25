@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,10 @@ public class DashboardConfigWebscript extends AbstractWebScript {
             }
         } catch (WebScriptException e) {
             throw e;
+        } catch (JSONException e) {
+            res.setStatus(Status.STATUS_BAD_REQUEST);
+            res.setContentType(CONTENT_TYPE_JSON);
+            res.getWriter().write(jsonError("Invalid JSON in request body: " + e.getMessage()));
         } catch (IllegalStateException e) {
             res.setStatus(Status.STATUS_NOT_FOUND);
             res.setContentType(CONTENT_TYPE_JSON);
