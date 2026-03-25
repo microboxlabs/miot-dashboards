@@ -119,6 +119,28 @@ public class DashboardConfigServiceImpl implements DashboardConfigService {
         writer.putContent(configJson);
     }
 
+    @Override
+    public boolean deleteConfig(String siteShortName, String slug) {
+        var docLib = getDocumentLibrary(siteShortName);
+        if (docLib == null) {
+            return false;
+        }
+
+        var dashboardFolder = fileFolderService.searchSimple(docLib, DASHBOARD_FOLDER);
+        if (dashboardFolder == null) {
+            return false;
+        }
+
+        var configFile = fileFolderService.searchSimple(dashboardFolder, toFileName(slug));
+        if (configFile == null) {
+            return false;
+        }
+
+        nodeService.deleteNode(configFile);
+        logger.debug("Deleted dashboard config '{}' for site '{}'", slug, siteShortName);
+        return true;
+    }
+
     private NodeRef getDocumentLibrary(String siteShortName) {
         var site = siteService.getSite(siteShortName);
         if (site == null) {

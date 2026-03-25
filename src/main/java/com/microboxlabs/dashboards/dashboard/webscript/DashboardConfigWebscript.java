@@ -42,6 +42,9 @@ public class DashboardConfigWebscript extends AbstractWebScript {
                 case "save":
                     handleSave(req, res);
                     break;
+                case "delete":
+                    handleDelete(req, res);
+                    break;
                 default:
                     res.setContentType(CONTENT_TYPE_JSON);
                     res.setStatus(Status.STATUS_BAD_REQUEST);
@@ -126,6 +129,28 @@ public class DashboardConfigWebscript extends AbstractWebScript {
 
         var config = body.getJSONObject("config");
         dashboardConfigService.saveConfig(site, slug, config.toString());
+
+        res.setContentType("application/json;charset=UTF-8");
+        res.getWriter().write(new JSONObject(Map.of("success", true)).toString());
+    }
+
+    private void handleDelete(WebScriptRequest req, WebScriptResponse res) throws IOException {
+        var body = new JSONObject(req.getContent().getContent());
+        var site = body.optString("site", null);
+        var slug = body.optString("slug", null);
+
+        if (site == null || site.isBlank() || slug == null || slug.isBlank()) {
+            throw new WebScriptException(Status.STATUS_BAD_REQUEST, "Missing required parameters: site, slug");
+        }
+
+        var deleted = dashboardConfigService.deleteConfig(site, slug);
+
+        if (!deleted) {
+            res.setStatus(Status.STATUS_NOT_FOUND);
+            res.setContentType(CONTENT_TYPE_JSON);
+            res.getWriter().write(jsonError("Configuration not found for slug: " + slug));
+            return;
+        }
 
         res.setContentType("application/json;charset=UTF-8");
         res.getWriter().write(new JSONObject(Map.of("success", true)).toString());
