@@ -3,6 +3,8 @@ package com.microboxlabs.dashboards.dashboard.webscript;
 import java.io.IOException;
 import java.util.Map;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +36,14 @@ public class DashboardConfigWebscript extends AbstractWebScript {
                 case "get":
                     handleGet(req, res);
                     break;
+                case "list":
+                    handleList(req, res);
+                    break;
                 case "save":
                     handleSave(req, res);
+                    break;
+                case "delete":
+                    handleDelete(req, res);
                     break;
                 default:
                     res.setContentType(CONTENT_TYPE_JSON);
@@ -44,6 +52,10 @@ public class DashboardConfigWebscript extends AbstractWebScript {
             }
         } catch (WebScriptException e) {
             throw e;
+        } catch (JSONException e) {
+            res.setStatus(Status.STATUS_BAD_REQUEST);
+            res.setContentType(CONTENT_TYPE_JSON);
+            res.getWriter().write(jsonError("Invalid JSON in request body: " + e.getMessage()));
         } catch (IllegalStateException e) {
             res.setStatus(Status.STATUS_NOT_FOUND);
             res.setContentType(CONTENT_TYPE_JSON);
@@ -73,6 +85,35 @@ public class DashboardConfigWebscript extends AbstractWebScript {
         res.getWriter().write(response.toString());
     }
 
+    private void handleList(WebScriptRequest req, WebScriptResponse res) throws IOException {
+        var body = new JSONObject(req.getContent().getContent());
+        var site = body.optString("site", null);
+
+        if (site == null || site.isBlank()) {
+            throw new WebScriptException(Status.STATUS_BAD_REQUEST, "Missing required parameter: site");
+        }
+
+        var configs = dashboardConfigService.listConfigs(site);
+
+        var dataArray = new JSONArray();
+        for (Map.Entry<String, String> entry : configs.entrySet()) {
+            try {
+                var item = new JSONObject();
+                item.put("slug", entry.getKey());
+                item.put("config", new JSONObject(entry.getValue()));
+                dataArray.put(item);
+            } catch (JSONException e) {
+                logger.warn("Skipping config with slug '{}': malformed JSON value '{}'", entry.getKey(), entry.getValue(), e);
+            }
+        }
+
+        var response = new JSONObject();
+        response.put("data", dataArray);
+
+        res.setContentType("application/json;charset=UTF-8");
+        res.getWriter().write(response.toString());
+    }
+
     private void handleSave(WebScriptRequest req, WebScriptResponse res) throws IOException {
         var body = new JSONObject(req.getContent().getContent());
         var site = body.optString("site", null);
@@ -88,6 +129,28 @@ public class DashboardConfigWebscript extends AbstractWebScript {
 
         var config = body.getJSONObject("config");
         dashboardConfigService.saveConfig(site, slug, config.toString());
+
+        res.setContentType("application/json;charset=UTF-8");
+        res.getWriter().write(new JSONObject(Map.of("success", true)).toString());
+    }
+
+    private void handleDelete(WebScriptRequest req, WebScriptResponse res) throws IOException {
+        var body = new JSONObject(req.getContent().getContent());
+        var site = body.optString("site", null);
+        var slug = body.optString("slug", null);
+
+        if (site == null || site.isBlank() || slug == null || slug.isBlank()) {
+            throw new WebScriptException(Status.STATUS_BAD_REQUEST, "Missing required parameters: site, slug");
+        }
+
+        var deleted = dashboardConfigService.deleteConfig(site, slug);
+
+        if (!deleted) {
+            res.setStatus(Status.STATUS_NOT_FOUND);
+            res.setContentType(CONTENT_TYPE_JSON);
+            res.getWriter().write(jsonError("Configuration not found for slug: " + slug));
+            return;
+        }
 
         res.setContentType("application/json;charset=UTF-8");
         res.getWriter().write(new JSONObject(Map.of("success", true)).toString());
