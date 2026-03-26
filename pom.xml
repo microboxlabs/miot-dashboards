@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.microboxlabs</groupId>
     <artifactId>miot-dashboards</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <name>miot-dashboards Platform/Repository JAR Module</name>
     <description>Platform/Repo JAR Module (to be included in the alfresco.war)</description>
     <packaging>jar</packaging>
